@@ -1,179 +1,558 @@
-const { getStreamsFromAttachment, log } = global.utils;
-const mediaTypes = ["photo", "png", "animated_image", "video", "audio"];
-
+const { getStreamsFromAttachment } = global.utils;
+const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
+const CONTACT_GROUP_ID = "4200466550263927";  // ID du groupe de logs
+const ALLOWED_RESPONDERS = ["61577243652962"]; // Seuls ces UIDs peuvent répondre
 module.exports = {
-    config: {
-        name: "callad",
-        version: "1.7",
-        author: "Christus",
-        countDown: 5,
-        role: 0,
-        description: {
-            fr: "📨 Envoyez vos rapports, suggestions ou bugs directement aux administrateurs du bot",
-            en: "📨 Send reports, feedbacks, or bugs directly to bot admins"
-        },
-        category: "contacts admin",
-        guide: {
-            fr: "📌 Usage : {pn} <votre message>",
-            en: "📌 Usage: {pn} <your message>"
-        }
-    },
+	config: {
+		name: "callad",
+		version: "4.0",
+		author: "ᎬᎷᏢᎬᏒᎬᏌᏒ ᏒᎾᎷᎬᎾ",
+		countDown: 5,
+		role: 0,
+		description: "Contact Admin",
+		category: "contacts",
+		guide: "   {pn} <message>"
+	},
 
-    langs: {
-        fr: {
-            missingMessage: "❌ Veuillez écrire le message que vous souhaitez envoyer aux admins !",
-            sendByGroup: "\n- Envoyé depuis le groupe : %1\n- Thread ID : %2",
-            sendByUser: "\n- Envoyé par l'utilisateur",
-            content: "\n\n💬 Contenu du message :\n────────────────────────────\n%1\n────────────────────────────\n💡 Répondez à ce message pour envoyer un retour à l'utilisateur",
-            success: "✅ Votre message a été envoyé avec succès à %1 admin !\n%2",
-            failed: "❌ Une erreur est survenue lors de l'envoi à %1 admin\n%2\n📌 Vérifiez la console pour plus de détails",
-            reply: "📍 Réponse de l'admin %1 :\n────────────────────────────\n%2\n────────────────────────────\n💡 Répondez à ce message pour continuer la discussion avec l'admin",
-            replySuccess: "✅ Votre réponse a été envoyée avec succès à l'admin !",
-            feedback: "📝 Feedback de l'utilisateur %1 :\n- User ID : %2%3\n\n💬 Contenu :\n────────────────────────────\n%4\n────────────────────────────\n💡 Répondez à ce message pour envoyer votre retour à l'utilisateur",
-            replyUserSuccess: "✅ Votre réponse a été envoyée avec succès à l'utilisateur !",
-            noAdmin: "⚠️ Actuellement, aucun administrateur n'est disponible."
-        },
-        en: {
-            missingMessage: "❌ Please enter the message you want to send to admin!",
-            sendByGroup: "\n- Sent from group: %1\n- Thread ID: %2",
-            sendByUser: "\n- Sent from user",
-            content: "\n\n💬 Message content:\n────────────────────────────\n%1\n────────────────────────────\n💡 Reply to this message to send feedback to the user",
-            success: "✅ Your message has been successfully sent to %1 admin!\n%2",
-            failed: "❌ An error occurred while sending your message to %1 admin\n%2\n📌 Check console for details",
-            reply: "📍 Reply from admin %1:\n────────────────────────────\n%2\n────────────────────────────\n💡 Reply to this message to continue chatting with admin",
-            replySuccess: "✅ Your reply has been successfully sent to admin!",
-            feedback: "📝 Feedback from user %1:\n- User ID: %2%3\n\n💬 Content:\n────────────────────────────\n%4\n────────────────────────────\n💡 Reply to this message to send feedback to user",
-            replyUserSuccess: "✅ Your reply has been successfully sent to user!",
-            noAdmin: "⚠️ No admin is available at the moment."
-        }
-    },
+	langs: {
+		en: {
+			missingMessage: "🎧| 𝗣𝗹𝗲𝗮𝘀𝗲 enter 𝘁𝗵𝗲 message 𝘆𝗼𝘂 want 𝘁𝗼 send ✍️🤼",
+			notConfigured: "⚠️ | Contact system is not configured",
+			success: "✅ | 𝗬𝗼𝘂𝗿 message 𝗵𝗮𝘀 been 𝘀𝗲𝗻𝘁 to 𝗮𝗱𝗺𝗶𝗻!\n| They 𝘄𝗶𝗹𝗹 reply 𝘀𝗼𝗼𝗻.\n\n 𝗡𝗕: Just 𝗿𝗲𝗽𝗹𝘆 to 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 to 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲✍️🤠",
+			sendError: "| An error occurred while sending your message🪶😐",
+			fromGroup: "\nFrom group: %1\nThread ID: %2",
+			fromUser: "\nFrom user",
+			adminReply: "Reply 𝗳𝗿𝗼𝗺 admin❯_ ɾ𝖺ɥÐ𝖾ɳ Ð 𝗚ɧ𝗈𝗎𝗅:\n❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n𝗠𝘀𝗴: %1\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛",
+			replySuccess: "✅ | Reply 𝘀𝗲𝗻𝘁!✍️🤠",
+			userReply: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗥𝗲𝗽𝗹𝘆 from %1:\n%2\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n 𝗥𝗲𝗽𝗹𝘆 to 𝘁𝗵𝗶𝘀 message 𝘁𝗼 𝗿𝗲𝘀𝗽𝗼𝗻𝗱",
+			newUserJoined: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗡𝗘𝗪 USER 𝗝𝗢𝗜𝗡𝗘𝗗 CONVERSATION\n. ❯_━━━━━━━━━━━━_❮\nFrom: %1\n𝗨𝗜𝗗: %2%3\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n%4\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n"
+		}
+	},
 
-    onStart: async function ({ args, message, event, usersData, threadsData, api, commandName, getLang }) {
-        const { config } = global.GoatBot;
+	onStart: async function ({ args, message, event, usersData, threadsData, api, commandName, getLang }) {
+		// Vérifier si le système est configuré
+		if (!CONTACT_GROUP_ID || CONTACT_GROUP_ID === "TON_ID_DE_GROUPE_ICI_MON_PETIT") {
+			return message.reply(getLang("notConfigured"));
+		}
 
-        if (!args[0]) return message.reply(getLang("missingMessage"));
+		// Vérifier si un message est fourni
+		if (!args[0]) {
+			return message.reply(getLang("missingMessage"));
+		}
 
-        const { senderID, threadID, isGroup } = event;
-        if (config.adminBot.length === 0) return message.reply(getLang("noAdmin"));
+		const { senderID, threadID, isGroup } = event;
+		const senderName = await usersData.getName(senderID);
+		
+		// Construire le message pour le groupe
+		let contactMsg = "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n";
+		contactMsg += "          𝗡𝗘𝗪 𝗖𝗢𝗡𝗧𝗔𝗖𝗧\n";
+		contactMsg += "❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n";
+		contactMsg += `𝗗𝗲: ${senderName}\n`;
+		contactMsg += `𝗨𝗶𝗱: ${senderID}`;
+		
+		if (isGroup) {
+			const threadInfo = await threadsData.get(threadID);
+			contactMsg += getLang("fromGroup", threadInfo.threadName || "Sans nom", threadID);
+		} else {
+			contactMsg += getLang("fromUser");
+		}
+		
+		contactMsg += "\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n";
+		contactMsg += args.join(" ");
+		contactMsg += "\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n";
+		contactMsg += "📝 𝗥𝗲𝗽𝗼𝗻𝗱𝘀 à 𝗰𝗲 message 𝗽𝗼𝘂𝗿 répondre✍️🤠";
 
-        const senderName = await usersData.getName(senderID);
+		const formMessage = {
+			body: contactMsg,
+			mentions: [{
+				id: senderID,
+				tag: senderName
+			}],
+			attachment: await getStreamsFromAttachment(
+				[...event.attachments, ...(event.messageReply?.attachments || [])]
+					.filter(item => mediaTypes.includes(item.type))
+			)
+		};
 
-        const msgHeader = "==📨️ APPEL ADMIN 📨️=="
-            + `\n- Nom de l'utilisateur : ${senderName}`
-            + `\n- ID de l'utilisateur : ${senderID}`
-            + (isGroup ? getLang("sendByGroup", (await threadsData.get(threadID)).threadName, threadID) : getLang("sendByUser"));
+		// Envoyer dans le groupe de contact
+		try {
+			const messageSent = await api.sendMessage(formMessage, CONTACT_GROUP_ID);
+			
+			// Sauvegarder la conversation
+			global.GoatBot.onReply.set(messageSent.messageID, {
+				commandName,
+				messageID: messageSent.messageID,
+				userThreadID: threadID,
+				userID: senderID,
+				userName: senderName,
+				userMessageID: event.messageID,
+				type: "waitingAdminReply"
+			});
 
-        const formMessage = {
-            body: msgHeader + getLang("content", args.join(" ")),
-            mentions: [{
-                id: senderID,
-                tag: senderName
-            }],
-            attachment: await getStreamsFromAttachment(
-                [...event.attachments, ...(event.messageReply?.attachments || [])]
-                    .filter(item => mediaTypes.includes(item.type))
-            )
-        };
+			// Confirmer à l'utilisateur
+			return message.reply(getLang("success"));
+		}
+		catch (error) {
+			console.log("Erreur callad:", error);
+			return message.reply(getLang("sendError"));
+		}
+	},
 
-        const successIDs = [];
-        const failedIDs = [];
-        const adminNames = await Promise.all(config.adminBot.map(async item => ({
-            id: item,
-            name: await usersData.getName(item)
-        })));
+	onReply: async function ({ args, event, api, message, Reply, usersData, threadsData, commandName, getLang }) {
+		const { type, userThreadID, userID, userName, userMessageID } = Reply;
+		if (type === "waitingAdminReply" && event.threadID === CONTACT_GROUP_ID) {
+			// Vérification: Seuls les UIDs autorisés peuvent répondre
+const { getStreamsFromAttachment } = global.utils;
+const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
+const CONTACT_GROUP_ID = "4200466550263927";  // ID du groupe de logs
+const ALLOWED_RESPONDERS = ["61577243652962"]; // Seuls ces UIDs peuvent répondre
+module.exports = {
+	config: {
+		name: "callad",
+		version: "4.0",
+		author: "ᎬᎷᏢᎬᏒᎬᏌᏒ ᏒᎾᎷᎬᎾ",
+		countDown: 5,
+		role: 0,
+		description: "Contact Admin",
+		category: "contacts",
+		guide: "   {pn} <message>"
+	},
 
-        for (const uid of config.adminBot) {
-            try {
-                const messageSend = await api.sendMessage(formMessage, uid);
-                successIDs.push(uid);
-                global.GoatBot.onReply.set(messageSend.messageID, {
-                    commandName,
-                    messageID: messageSend.messageID,
-                    threadID,
-                    messageIDSender: event.messageID,
-                    type: "userCallAdmin"
-                });
-            } catch (err) {
-                failedIDs.push({ adminID: uid, error: err });
-            }
-        }
+	langs: {
+		en: {
+			missingMessage: "🎧| 𝗣𝗹𝗲𝗮𝘀𝗲 enter 𝘁𝗵𝗲 message 𝘆𝗼𝘂 want 𝘁𝗼 send ✍️🤼",
+			notConfigured: "⚠️ | Contact system is not configured",
+			success: "✅ | 𝗬𝗼𝘂𝗿 message 𝗵𝗮𝘀 been 𝘀𝗲𝗻𝘁 to 𝗮𝗱𝗺𝗶𝗻!\n| They 𝘄𝗶𝗹𝗹 reply 𝘀𝗼𝗼𝗻.\n\n 𝗡𝗕: Just 𝗿𝗲𝗽𝗹𝘆 to 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 to 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲✍️🤠",
+			sendError: "| An error occurred while sending your message🪶😐",
+			fromGroup: "\nFrom group: %1\nThread ID: %2",
+			fromUser: "\nFrom user",
+			adminReply: "Reply 𝗳𝗿𝗼𝗺 admin❯_ ɾ𝖺ɥÐ𝖾ɳ Ð 𝗚ɧ𝗈𝗎𝗅:\n❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n𝗠𝘀𝗴: %1\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛",
+			replySuccess: "✅ | Reply 𝘀𝗲𝗻𝘁!✍️🤠",
+			userReply: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗥𝗲𝗽𝗹𝘆 from %1:\n%2\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n 𝗥𝗲𝗽𝗹𝘆 to 𝘁𝗵𝗶𝘀 message 𝘁𝗼 𝗿𝗲𝘀𝗽𝗼𝗻𝗱",
+			newUserJoined: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗡𝗘𝗪 USER 𝗝𝗢𝗜𝗡𝗘𝗗 CONVERSATION\n. ❯_━━━━━━━━━━━━_❮\nFrom: %1\n𝗨𝗜𝗗: %2%3\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n%4\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n"
+		}
+	},
 
-        let resultMsg = "";
-        if (successIDs.length > 0) {
-            resultMsg += getLang("success", successIDs.length,
-                adminNames.filter(item => successIDs.includes(item.id))
-                    .map(item => ` <@${item.id}> (${item.name})`).join("\n")
-            );
-        }
-        if (failedIDs.length > 0) {
-            resultMsg += getLang("failed", failedIDs.length,
-                failedIDs.map(item => ` <@${item.adminID}> (${adminNames.find(a => a.id === item.adminID)?.name || item.adminID})`).join("\n")
-            );
-            log.err("CALL ADMIN", failedIDs);
-        }
+	onStart: async function ({ args, message, event, usersData, threadsData, api, commandName, getLang }) {
+		// Vérifier si le système est configuré
+		if (!CONTACT_GROUP_ID || CONTACT_GROUP_ID === "TON_ID_DE_GROUPE_ICI_MON_PETIT") {
+			return message.reply(getLang("notConfigured"));
+		}
 
-        return message.reply({
-            body: resultMsg,
-            mentions: adminNames.map(item => ({ id: item.id, tag: item.name }))
-        });
-    },
+		// Vérifier si un message est fourni
+		if (!args[0]) {
+			return message.reply(getLang("missingMessage"));
+		}
 
-    onReply: async ({ args, event, api, message, Reply, usersData, commandName, getLang }) => {
-        const { type, threadID, messageIDSender } = Reply;
-        const senderName = await usersData.getName(event.senderID);
-        const { isGroup } = event;
+		const { senderID, threadID, isGroup } = event;
+		const senderName = await usersData.getName(senderID);
+		
+		// Construire le message pour le groupe
+		let contactMsg = "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n";
+		contactMsg += "          𝗡𝗘𝗪 𝗖𝗢𝗡𝗧𝗔𝗖𝗧\n";
+		contactMsg += "❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n";
+		contactMsg += `𝗗𝗲: ${senderName}\n`;
+		contactMsg += `𝗨𝗶𝗱: ${senderID}`;
+		
+		if (isGroup) {
+			const threadInfo = await threadsData.get(threadID);
+			contactMsg += getLang("fromGroup", threadInfo.threadName || "Sans nom", threadID);
+		} else {
+			contactMsg += getLang("fromUser");
+		}
+		
+		contactMsg += "\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n";
+		contactMsg += args.join(" ");
+		contactMsg += "\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n";
+		contactMsg += "📝 𝗥𝗲𝗽𝗼𝗻𝗱𝘀 à 𝗰𝗲 message 𝗽𝗼𝘂𝗿 répondre✍️🤠";
 
-        switch (type) {
-            case "userCallAdmin": {
-                const formMessage = {
-                    body: getLang("reply", senderName, args.join(" ")),
-                    mentions: [{ id: event.senderID, tag: senderName }],
-                    attachment: await getStreamsFromAttachment(
-                        event.attachments.filter(item => mediaTypes.includes(item.type))
-                    )
-                };
+		const formMessage = {
+			body: contactMsg,
+			mentions: [{
+				id: senderID,
+				tag: senderName
+			}],
+			attachment: await getStreamsFromAttachment(
+				[...event.attachments, ...(event.messageReply?.attachments || [])]
+					.filter(item => mediaTypes.includes(item.type))
+			)
+		};
 
-                api.sendMessage(formMessage, threadID, (err, info) => {
-                    if (err) return message.err(err);
-                    message.reply(getLang("replyUserSuccess"));
-                    global.GoatBot.onReply.set(info.messageID, {
-                        commandName,
-                        messageID: info.messageID,
-                        messageIDSender: event.messageID,
-                        threadID: event.threadID,
-                        type: "adminReply"
-                    });
-                }, messageIDSender);
-                break;
-            }
-            case "adminReply": {
-                let sendByGroup = "";
-                if (isGroup) {
-                    const { threadName } = await api.getThreadInfo(event.threadID);
-                    sendByGroup = getLang("sendByGroup", threadName, event.threadID);
-                }
-                const formMessage = {
-                    body: getLang("feedback", senderName, event.senderID, sendByGroup, args.join(" ")),
-                    mentions: [{ id: event.senderID, tag: senderName }],
-                    attachment: await getStreamsFromAttachment(
-                        event.attachments.filter(item => mediaTypes.includes(item.type))
-                    )
-                };
+		// Envoyer dans le groupe de contact
+		try {
+			const messageSent = await api.sendMessage(formMessage, CONTACT_GROUP_ID);
+			
+			// Sauvegarder la conversation
+			global.GoatBot.onReply.set(messageSent.messageID, {
+				commandName,
+				messageID: messageSent.messageID,
+				userThreadID: threadID,
+				userID: senderID,
+				userName: senderName,
+				userMessageID: event.messageID,
+				type: "waitingAdminReply"
+			});
 
-                api.sendMessage(formMessage, threadID, (err, info) => {
-                    if (err) return message.err(err);
-                    message.reply(getLang("replySuccess"));
-                    global.GoatBot.onReply.set(info.messageID, {
-                        commandName,
-                        messageID: info.messageID,
-                        messageIDSender: event.messageID,
-                        threadID: event.threadID,
-                        type: "userCallAdmin"
-                    });
-                }, messageIDSender);
-                break;
-            }
-            default: break;
-        }
-    }
-};
+			// Confirmer à l'utilisateur
+			return message.reply(getLang("success"));
+		}
+		catch (error) {
+			console.log("Erreur callad:", error);
+			return message.reply(getLang("sendError"));
+		}
+	},
+
+	onReply: async function ({ args, event, api, message, Reply, usersData, threadsData, commandName, getLang }) {
+		const { type, userThreadID, userID, userName, userMessageID } = Reply;
+		if (type === "waitingAdminReply" && event.threadID === CONTACT_GROUP_ID) {
+			// Vérification: Seuls les UIDs autorisés peuvent répondre
+			if (!ALLOWED_RESPONDERS.includes(event.senderID)) {
+				return; // Ignorer si ce n'est pas un admin autorisé
+			}
+			
+			const replyMessage = {
+				body: getLang("adminReply", args.join(" ")),
+				attachment: await getStreamsFromAttachment(
+					event.attachments.filter(item => mediaTypes.includes(item.type))
+				)
+			};
+
+			// Envoyer la réponse à l'utilisateur
+			api.sendMessage(replyMessage, userThreadID, (err, info) => {
+				if (err) {
+					return message.reply("❌ | Erreur lors de l'envoi");
+				}
+
+				// Sauvegarder pour que l'user ORIGINAL puisse répondre
+				global.GoatBot.onReply.set(info.messageID, {
+					commandName,
+					messageID: info.messageID,
+					adminMessageID: event.messageID,
+					userID: userID,
+					userName: userName,
+					userThreadID: userThreadID,
+					type: "waitingUserReply"
+				});
+   // Sauvegarder AUSSI sur le message de l'admin dans le groupe
+				global.GoatBot.onReply.set(event.messageID, {
+					commandName,
+					messageID: event.messageID,
+					currentUserID: userID,
+					currentUserName: userName,
+					currentUserThreadID: userThreadID,
+					type: "openConversation"
+				});
+
+				message.reply(getLang("replySuccess"));
+			}, userMessageID);
+		}
+		
+		else if (type === "waitingUserReply" && event.senderID === userID) {
+			const userReplyMsg = {
+				body: getLang("userReply", userName, args.join(" ")),
+				mentions: [{
+					id: userID,
+					tag: userName
+				}],
+				attachment: await getStreamsFromAttachment(
+					event.attachments.filter(item => mediaTypes.includes(item.type))
+				)
+			};
+
+			// Envoyer dans le groupe de contact
+			api.sendMessage(userReplyMsg, CONTACT_GROUP_ID, (err, info) => {
+				if (err) {
+					return message.reply("❌ | Erreur");
+				}
+
+				// Re-sauvegarder pour continuer la conversation
+				global.GoatBot.onReply.set(info.messageID, {
+					commandName,
+					messageID: info.messageID,
+					userThreadID: userThreadID,
+					userID: userID,
+					userName: userName,
+					userMessageID: event.messageID,
+					type: "waitingAdminReply"
+				});
+
+				message.reply(getLang("replySuccess"));
+			}, Reply.adminMessageID);
+		}
+		// NOUVEAU USER REJOINT LA CONVERSATION (dans le groupe)
+		else if (type === "openConversation" && event.threadID === CONTACT_GROUP_ID) {
+			// Si c'est un nouvel user (pas l'user actuel de la conversation)
+			if (event.senderID !== Reply.currentUserID && !ALLOWED_RESPONDERS.includes(event.senderID)) {
+				const newUserID = event.senderID;
+				const newUserName = await usersData.getName(newUserID);
+				
+				// Déterminer d'où vient le nouveau user
+				let fromInfo = "";
+				const isGroup = event.isGroup;
+				if (isGroup) {
+					const threadInfo = await threadsData.get(event.threadID);
+					fromInfo = getLang("fromGroup", threadInfo.threadName || "Sans nom", event.threadID);
+				} else {
+					fromInfo = getLang("fromUser");
+				}
+
+				// Message pour le groupe
+				const newUserMsg = {
+					body: getLang("newUserJoined", newUserName, newUserID, fromInfo, args.join(" ")),
+					mentions: [{
+						id: newUserID,
+						tag: newUserName
+					}],
+					attachment: await getStreamsFromAttachment(
+						event.attachments.filter(item => mediaTypes.includes(item.type))
+					)
+				};
+
+				// Envoyer dans le groupe
+				api.sendMessage(newUserMsg, CONTACT_GROUP_ID, (err, info) => {
+					if (err) return;
+
+					// Sauvegarder pour que l'admin puisse répondre au nouveau user
+					global.GoatBot.onReply.set(info.messageID, {
+						commandName,
+						messageID: info.messageID,
+						userThreadID: event.threadID,
+						userID: newUserID,
+						userName: newUserName,
+						userMessageID: event.messageID,
+						type: "waitingAdminReply"
+					});
+				}, event.messageID);
+
+				// Confirmer au nouveau user
+				message.reply(getLang("success"));
+			}
+		}
+	}
+};o			if (!ALLOWED_RESPONDERS.includes(event.senderID)) {
+				return; // Ignorer si ce n'est pas un admin autorisé
+			}
+			
+			const replyMessage = {
+				body: getLang("adminReply", args.join(" ")),
+				attachment: await getStreamsFromAttachment(
+					event.attachments.filter(item => mediaTypes.includes(item.type))
+				)
+			};
+
+			// Envoyer la réponse à l'utilisateur
+			api.sendMessage(replyMessage, userThreadID, (err, info) => {
+				if (err) {
+					return message.reply("❌ | Erreur lors de l'envoi");
+				}
+
+				// Sauvegarder pour que l'user ORIGINAL puisse répondre
+				global.GoatBot.onReply.set(info.messageID, {
+					commandName,
+					messageID: info.messageID,
+					adminMessageID: event.messageID,
+					userID: userID,
+					userName: userName,
+					userThreadID: userThreadID,
+					type: "waitingUserReply"
+				});
+   // Sauvegarder AUSSI sur le message de l'admin dans le groupe
+				global.GoatBot.onReply.set(event.messageID, {
+					commandName,
+					messageID: event.messageID,
+					currentUserID: userID,
+					currentUserName: userName,
+					currentUserThreadID: userThreadID,
+					type: "openConversation"
+				});
+
+				message.reply(getLang("replySuccess"));
+			}, userMessageID);
+		}
+		
+		else if (type === "waitingUserReply" && event.senderID === userID) {
+			const userReplyMsg = {
+				body: getLang("userReply", userName, args.join(" ")),
+				mentions: [{
+					id: userID,
+					tag: userName
+				}],
+				attachment: await getStreamsFromAttachment(
+					event.attachments.filter(item => mediaTypes.includes(item.type))
+				)
+			};
+
+			// Envoyer dans le groupe de contact
+			api.sendMessage(userReplyMsg, CONTACT_GROUP_ID, (err, info) => {
+				if (err) {
+					return message.reply("❌ | Erreur");
+				}
+
+				// Re-sauvegarder pour continuer la conversation
+				global.GoatBot.onReply.set(info.messageID, {
+					commandName,
+					messageID: info.messageID,
+					userThreadID: userThreadID,
+					userID: userID,
+					userName: userName,
+					userMessageID: event.messageID,
+					type: "waitingAdminReply"
+				});
+
+				message.reply(getLang("replySuccess"));
+			}, Reply.adminMessageID);
+		}
+		// NOUVEAU USER REJOINT LA CONVERSATION (dans le groupe)
+		else if (type === "openConversation" && event.threadID === CONTACT_GROUP_ID) {
+			// Si c'est un nouvel user (pas l'user actuel de la conversation)
+			if (event.senderID !== Reply.currentUserID && !ALLOWED_RESPONDERS.includes(event.senderID)) {
+				const newUserID = event.senderID;
+				const newUserName = await usersData.getName(newUserID);
+				
+				// Déterminer d'où vient le nouveau user
+				let fromInfo = "";
+				const isGroup = event.isGroup;
+				if (isGroup) {
+					const threadInfo = await threadsData.get(event.threadID);
+					fromInfo = getLang("fromGroup", threadInfo.threadName || "Sans nom", event.threadID);
+				} else {
+					fromInfo = getLang("fromUser");
+				}
+
+				// Message pour le groupe
+				const newUserMsg = {
+					body: getLang("newUserJoined", newUserName, newUserID, fromInfo, args.join(" ")),
+					mentions: [{
+						id: newUserID,
+						tag: newUserName
+					}],
+					attachment: await getStreamsFromAttachment(
+						event.attachments.filter(item => mediaTypes.includes(item.type))
+					)
+				};
+
+				// Envoyer dans le groupe
+				api.sendMessage(newUserMsg, CONTACT_GROUP_ID, (err, info) => {
+					if (err) return;
+
+					// Sauvegarder pour que l'admin puisse répondre au nouveau user
+					global.GoatBot.onReply.set(info.messageID, {
+						commandName,
+						messageID: info.messageID,
+						userThreadID: event.threadID,
+						userID: newUserID,
+						userName: newUserName,
+						userMessageID: event.messageID,
+						type: "waitingAdminReply"
+					});
+				}, event.messageID);
+
+				// Confirmer au nouveau user
+				message.reply(getLang("success"));
+			}
+		}
+	}
+};oconst { getStreamsFromAttachment } = global.utils;
+const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
+const CONTACT_GROUP_ID = "4200466550263927";  // ID du groupe de logs
+const ALLOWED_RESPONDERS = ["61577243652962"]; // Seuls ces UIDs peuvent répondre
+module.exports = {
+	config: {
+		name: "callad",
+		version: "4.0",
+		author: "ᎬᎷᏢᎬᏒᎬᏌᏒ ᏒᎾᎷᎬᎾ",
+		countDown: 5,
+		role: 0,
+		description: "Contact Admin",
+		category: "contacts",
+		guide: "   {pn} <message>"
+	},
+
+	langs: {
+		en: {
+			missingMessage: "🎧| 𝗣𝗹𝗲𝗮𝘀𝗲 enter 𝘁𝗵𝗲 message 𝘆𝗼𝘂 want 𝘁𝗼 send ✍️🤼",
+			notConfigured: "⚠️ | Contact system is not configured",
+			success: "✅ | 𝗬𝗼𝘂𝗿 message 𝗵𝗮𝘀 been 𝘀𝗲𝗻𝘁 to 𝗮𝗱𝗺𝗶𝗻!\n| They 𝘄𝗶𝗹𝗹 reply 𝘀𝗼𝗼𝗻.\n\n 𝗡𝗕: Just 𝗿𝗲𝗽𝗹𝘆 to 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 to 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲✍️🤠",
+			sendError: "| An error occurred while sending your message🪶😐",
+			fromGroup: "\nFrom group: %1\nThread ID: %2",
+			fromUser: "\nFrom user",
+			adminReply: "Reply 𝗳𝗿𝗼𝗺 admin❯_ ɾ𝖺ɥÐ𝖾ɳ Ð 𝗚ɧ𝗈𝗎𝗅:\n❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n𝗠𝘀𝗴: %1\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛",
+			replySuccess: "✅ | Reply 𝘀𝗲𝗻𝘁!✍️🤠",
+			userReply: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗥𝗲𝗽𝗹𝘆 from %1:\n%2\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n 𝗥𝗲𝗽𝗹𝘆 to 𝘁𝗵𝗶𝘀 message 𝘁𝗼 𝗿𝗲𝘀𝗽𝗼𝗻𝗱",
+			newUserJoined: "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n𝗡𝗘𝗪 USER 𝗝𝗢𝗜𝗡𝗘𝗗 CONVERSATION\n. ❯_━━━━━━━━━━━━_❮\nFrom: %1\n𝗨𝗜𝗗: %2%3\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n%4\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n"
+		}
+	},
+
+	onStart: async function ({ args, message, event, usersData, threadsData, api, commandName, getLang }) {
+		// Vérifier si le système est configuré
+		if (!CONTACT_GROUP_ID || CONTACT_GROUP_ID === "TON_ID_DE_GROUPE_ICI_MON_PETIT") {
+			return message.reply(getLang("notConfigured"));
+		}
+
+		// Vérifier si un message est fourni
+		if (!args[0]) {
+			return message.reply(getLang("missingMessage"));
+		}
+
+		const { senderID, threadID, isGroup } = event;
+		const senderName = await usersData.getName(senderID);
+		
+		// Construire le message pour le groupe
+		let contactMsg = "┏━━━━━━━Ι ❖ Ι━━━━━━━┓\n";
+		contactMsg += "          𝗡𝗘𝗪 𝗖𝗢𝗡𝗧𝗔𝗖𝗧\n";
+		contactMsg += "❯_━━━━━━Ι ❖ Ι━━━━━━_❮\n";
+		contactMsg += `𝗗𝗲: ${senderName}\n`;
+		contactMsg += `𝗨𝗶𝗱: ${senderID}`;
+		
+		if (isGroup) {
+			const threadInfo = await threadsData.get(threadID);
+			contactMsg += getLang("fromGroup", threadInfo.threadName || "Sans nom", threadID);
+		} else {
+			contactMsg += getLang("fromUser");
+		}
+		
+		contactMsg += "\n\n 𝗠𝗲𝘀𝘀𝗮𝗴𝗲:\n";
+		contactMsg += args.join(" ");
+		contactMsg += "\n┗━━━━━━━Ι ❖ Ι━━━━━━━┛\n";
+		contactMsg += "📝 𝗥𝗲𝗽𝗼𝗻𝗱𝘀 à 𝗰𝗲 message 𝗽𝗼𝘂𝗿 répondre✍️🤠";
+
+		const formMessage = {
+			body: contactMsg,
+			mentions: [{
+				id: senderID,
+				tag: senderName
+			}],
+			attachment: await getStreamsFromAttachment(
+				[...event.attachments, ...(event.messageReply?.attachments || [])]
+					.filter(item => mediaTypes.includes(item.type))
+			)
+		};
+
+		// Envoyer dans le groupe de contact
+		try {
+			const messageSent = await api.sendMessage(formMessage, CONTACT_GROUP_ID);
+			
+			// Sauvegarder la conversation
+			global.GoatBot.onReply.set(messageSent.messageID, {
+				commandName,
+				messageID: messageSent.messageID,
+				userThreadID: threadID,
+				userID: senderID,
+				userName: senderName,
+				userMessageID: event.messageID,
+				type: "waitingAdminReply"
+			});
+
+			// Confirmer à l'utilisateur
+			return message.reply(getLang("success"));
+		}
+		catch (error) {
+			console.log("Erreur callad:", error);
+			return message.reply(getLang("sendError"));
+		}
+	},
+
+	onReply: async function ({ args, event, api, message, Reply, usersData, threadsData, commandName, getLang }) {
+		const { type, userThreadID, userID, userName, userMessageID } = Reply;
+		if (type === "waitingAdminReply" && event.threadID === CONTACT_GROUP_ID) {
+			// Vérification: Seuls les UIDs autorisés peuvent répondre
