@@ -100,7 +100,7 @@ module.exports = {
 
       return message.reply({
         body: `Hello ${userNameTag}, my prefix is\n\n╭─────◉
-│➢ My prefix: [ • ]
+│➢ My prefix: [ ✓ ]
 │👑Owner: Rayd🤠
 │🔗 Facebook: https://www.facebook.com/efouarayd56
 ╰───────────⬤
