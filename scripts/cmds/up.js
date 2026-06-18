@@ -1,127 +1,134 @@
-const os = require("os");
-const moment = require("moment-timezone");
+const { commands, aliases } = global.GoatBot;
+const os = require('os');
 
 module.exports = {
   config: {
-    name: "uptime",
-    aliases: ["up", "upt"],
-    version: "14.0",
-    author: "lonely",
-    countDown: 5,
+    name: "up",
+    version: "1.0",
+    author: "rayd",
+    countDown: 2,
     role: 0,
-    shortDescription: "Show bot uptime",
-    longDescription: "Advanced uptime system info",
-    category: "system",
-    guide: "{pn}"
+    shortDescription: { en: "Get bot uptime" },
+    category: "utility",
+    guide: { en: "up — get bot uptime" }
   },
-
-  onStart: async function ({ message, api }) {
+  onStart: async function ({ api, message, args, event, usersData }) {
     try {
-      const start = Date.now();
-
       const uptime = process.uptime();
-
-      const days = Math.floor(uptime / (60 * 60 * 24));
-      const hours = Math.floor((uptime % (60 * 60 * 24)) / (60 * 60));
-      const minutes = Math.floor((uptime % (60 * 60)) / 60);
+      const hours = Math.floor(uptime / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
       const seconds = Math.floor(uptime % 60);
 
-      const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
-      const freeMem = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
-      const usedMem = (totalMem - freeMem).toFixed(2);
+      const networkInterfaces = os.networkInterfaces();
+      let networkInfo = "Not available";
+      if (networkInterfaces && Object.keys(networkInterfaces).length > 0) {
+        const iface = networkInterfaces.eth0 || networkInterfaces.wlan0 || networkInterfaces.Ethernet || networkInterfaces['Wi-Fi'];
+        if (iface && iface[0]) {
+          networkInfo = iface[0].address || "No IP";
+        }
+      }
 
-      const cpu = os.cpus()[0].model;
-      const platform = os.platform();
-      const hostname = os.hostname();
+      const cpus = os.cpus();
+      const cpuUsage = (cpus[0].times.user / (cpus[0].times.user + cpus[0].times.idle)) * 100;
 
-      const time = moment.tz("Africa/Johannesburg").format("HH:mm:ss");
-      const date = moment.tz("Africa/Johannesburg").format("DD/MM/YYYY");
+      const card = `
+------------------------- ⚡️ RAYD BOT UPTIME STATUS ⚡️ -------------------------
 
-      const loading = await message.reply(`
-╭━━━━━━━━━━━━━━━━╮
-      𝗨𝗣𝗧𝗜𝗠𝗘 𝗩𝟭𝟰
-╰━━━━━━━━━━━━━━━━╯
+  🕰️ Time: ${hours}h ${minutes}m ${seconds}s
+  📆 Last Restart: ${new Date(Date.now() - (uptime * 1000)).toLocaleString()}
+  👨‍💻 Author: rayd
+  👑 Admin: Rayd
+  🔩 Version: 1.0
+  📊 CPU: ${cpuUsage.toFixed(2)}%
+  📈 RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB
+  📁 Disk: ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)} GB
+  📶 Network: ${networkInfo}
+  📈 Uptime Chart: ${hours >= 2 ? '█'.repeat(Math.floor(hours / 2)) : '▁'} ${hours}h
+  📊 System Load: ${os.loadavg()[0].toFixed(2)}
+  📆 System Time: ${new Date().toLocaleString()}
+  📁 OS: ${os.platform()} ${os.arch()}
+  👥 Users: ${os.userInfo().username}
 
-⏳ Loading system info...
-▰▰▱▱▱▱▱▱ 20%
-      `);
+------------------------- ⚡️ SYSTEM ONLINE STATUS ⚡️ -------------------------
 
-      setTimeout(async () => {
-        await api.editMessage(`
-╭━━━━━━━━━━━━━━━━╮
-      𝗨𝗣𝗧𝗜𝗠𝗘 𝗩𝟭𝟰
-╰━━━━━━━━━━━━━━━━╯
+  ✔️ All systems operational and running
+  🚀 Performance: Optimal
+  🔒 Security: Up to date
 
-⚡ Scanning server...
-▰▰▰▰▱▱▱▱ 59%
-        `, loading.messageID);
+--------------------------------------------------------
+`.trim();
 
-        setTimeout(async () => {
-          await api.editMessage(`
-╭━━━━━━━━━━━━━━━━╮
-      𝗨𝗣𝗧𝗜𝗠𝗘 𝗩𝟭𝟰
-╰━━━━━━━━━━━━━━━━╯
-
-🚀 Finalizing data...
-▰▰▰▰▰▰▰▱ 99%
-          `, loading.messageID);
-
-          setTimeout(async () => {
-            const ping = Date.now() - start;
-
-            await api.editMessage(`
-╭━━━━━━━━━━━━━━━━━━╮
-       𝗨𝗣𝗧𝗜𝗠𝗘 𝗩𝟭𝟰
-╰━━━━━━━━━━━━━━━━━━╯
-
-⏰ Uptime
-${days}d ${hours}h ${minutes}m ${seconds}s
-
-📶 Ping
-${ping}ms
-
-💾 RAM Usage
-${usedMem}GB / ${totalMem}GB
-
-🖥️ Platform
-${platform}
-
-⚙️ CPU
-${cpu}
-
-🌐 Host
-${hostname}
-
-🕒 Time
-${time} (SAST)
-
-📅 Date
-${date}
-
-👑 Bot Admin
-• ᏞᏫᏁᎬᏞᎽ
-
-━━━━━━━━━━━━━━━━━━
-ᏞᏫᏁᎬᏞᎽ 💙
-            `, loading.messageID);
-
-            api.sendMessage({
-              body: "👑 Bot Admin",
-              mentions: [
-                {
-                  tag: "ᏞᏫᏁᎬᏞᎽ",
-                  id: "61584608305717"
-                }
-              ]
-            }, message.threadID);
-
-          }, 1500);
-        }, 1500);
-      }, 1500);
-
-    } catch (e) {
-      console.log(e);
-      return message.reply("❌ Failed to fetch uptime info.");
+      return message.reply(card);
+    } catch (err) {
+      console.error("UP CMD ERROR:", err);
+      return message.reply(`Oops, something went wrong!`);
     }
   }
+};Entercconst { commands, aliases } = global.GoatBot;
+const os = require('os');
+
+module.exports = {
+  config: {
+    name: "up",
+    version: "1.0",
+    author: "rayd",
+    countDown: 2,
+    role: 0,
+    shortDescription: { en: "Get bot uptime" },
+    category: "utility",
+    guide: { en: "up — get bot uptime" }
+  },
+  onStart: async function ({ api, message, args, event, usersData }) {
+    try {
+      const uptime = process.uptime();
+      const hours = Math.floor(uptime / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const seconds = Math.floor(uptime % 60);
+
+      const networkInterfaces = os.networkInterfaces();
+      let networkInfo = "Not available";
+      if (networkInterfaces && Object.keys(networkInterfaces).length > 0) {
+        const iface = networkInterfaces.eth0 || networkInterfaces.wlan0 || networkInterfaces.Ethernet || networkInterfaces['Wi-Fi'];
+        if (iface && iface[0]) {
+          networkInfo = iface[0].address || "No IP";
+        }
+      }
+
+      const cpus = os.cpus();
+      const cpuUsage = (cpus[0].times.user / (cpus[0].times.user + cpus[0].times.idle)) * 100;
+
+      const card = `
+------------------------- ⚡️ RAYD BOT UPTIME STATUS ⚡️ -------------------------
+
+  🕰️ Time: ${hours}h ${minutes}m ${seconds}s
+  📆 Last Restart: ${new Date(Date.now() - (uptime * 1000)).toLocaleString()}
+  👨‍💻 Author: rayd
+  👑 Admin: Rayd
+  🔩 Version: 1.0
+  📊 CPU: ${cpuUsage.toFixed(2)}%
+  📈 RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB
+  📁 Disk: ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)} GB
+  📶 Network: ${networkInfo}
+  📈 Uptime Chart: ${hours >= 2 ? '█'.repeat(Math.floor(hours / 2)) : '▁'} ${hours}h
+  📊 System Load: ${os.loadavg()[0].toFixed(2)}
+  📆 System Time: ${new Date().toLocaleString()}
+  📁 OS: ${os.platform()} ${os.arch()}
+  👥 Users: ${os.userInfo().username}
+
+------------------------- ⚡️ SYSTEM ONLINE STATUS ⚡️ -------------------------
+
+  ✔️ All systems operational and running
+  🚀 Performance: Optimal
+  🔒 Security: Up to date
+
+--------------------------------------------------------
+`.trim();
+
+      return message.reply(card);
+    } catch (err) {
+      console.error("UP CMD ERROR:", err);
+      return message.reply(`Oops, something went wrong!`);
+    }
+  }
+};Enter
 };
